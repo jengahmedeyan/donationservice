@@ -1,0 +1,37 @@
+name: CI
+
+# The enforcement backstop: the same verify gate agents run locally (`/verify`) runs on every
+# push and PR. A PR cannot merge unless build (-warnaserror), format, and tests are all green —
+# so human review always starts from a green state.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "8.0.x"
+
+      - name: Restore
+        run: dotnet restore
+
+      - name: Build (warnings as errors)
+        run: dotnet build --no-restore -warnaserror
+
+      - name: Verify formatting
+        run: dotnet format --verify-no-changes
+
+      - name: Test
+        run: dotnet test --no-build --verbosity normal
+
+      - name: Guardrail checks (authorization / PII / layering)
+        run: bash evals/check-guardrails.sh

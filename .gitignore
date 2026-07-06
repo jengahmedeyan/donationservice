@@ -1,0 +1,10 @@
+bin/
+obj/
+*.user
+.vs/
+
+# Claude Code: share settings.json + commands, keep personal overrides local
+.claude/settings.local.json
+
+# Agent scratch notes (structured note-taking, per docs/agent-working-agreements.md)
+NOTES.md

@@ -1,0 +1,9 @@
+# Normalize line endings. Default: let git handle text automatically.
+* text=auto
+
+# Shell scripts must stay LF — they run on Linux CI; CRLF breaks the shebang.
+*.sh text eol=lf
+
+# YAML workflows run on Linux CI too.
+*.yml text eol=lf
+*.yaml text eol=lf
