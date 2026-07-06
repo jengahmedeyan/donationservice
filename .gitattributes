@@ -1,9 +1,13 @@
-# Normalize line endings. Default: let git handle text automatically.
-* text=auto
+# Standardize on LF in the repo and working tree, cross-platform. This must match
+# .editorconfig's `end_of_line = lf`, or `dotnet format` fails on the Linux CI runner.
+* text=auto eol=lf
 
-# Shell scripts must stay LF — they run on Linux CI; CRLF breaks the shebang.
+# Source and config files: always LF.
+*.cs text eol=lf
+*.csproj text eol=lf
+*.props text eol=lf
+*.json text eol=lf
+*.md text eol=lf
 *.sh text eol=lf
-
-# YAML workflows run on Linux CI too.
 *.yml text eol=lf
 *.yaml text eol=lf
