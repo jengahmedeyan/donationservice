@@ -8,6 +8,7 @@ security rules. This is a focused review, not a general code review — spend at
 areas below, where AI-generated code most often goes wrong.
 
 ## Scope
+
 If there is a git diff, review the diff. Otherwise review the files in $ARGUMENTS, or ask which
 files to review.
 
