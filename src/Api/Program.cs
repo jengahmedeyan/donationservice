@@ -34,6 +34,11 @@ app.Use(async (context, next) =>
         context.Response.StatusCode = StatusCodes.Status403Forbidden;
         await context.Response.WriteAsJsonAsync(new { title = "Forbidden" });
     }
+    catch (InvalidDonationStateException ex)
+    {
+        context.Response.StatusCode = StatusCodes.Status409Conflict;
+        await context.Response.WriteAsJsonAsync(new { title = "Invalid state", detail = ex.Message });
+    }
 });
 
 if (app.Environment.IsDevelopment())

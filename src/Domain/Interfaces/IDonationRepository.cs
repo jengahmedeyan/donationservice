@@ -10,4 +10,5 @@ public interface IDonationRepository
 {
     Task<DonationRequest> AddAsync(DonationRequest request, CancellationToken ct = default);
     Task<DonationRequest?> GetByIdAsync(Guid id, CancellationToken ct = default);
+    Task UpdateAsync(DonationRequest request, CancellationToken ct = default);
 }

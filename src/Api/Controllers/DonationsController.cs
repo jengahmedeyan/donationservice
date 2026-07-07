@@ -1,3 +1,4 @@
+using Application.Donations.Commands.CancelDonationRequest;
 using Application.Donations.Commands.SubmitDonationRequest;
 using Application.Donations.Dtos;
 using Application.Donations.Queries.GetDonationRequestById;
@@ -33,6 +34,20 @@ public class DonationsController : ControllerBase
 
         var result = await _sender.Send(
             new GetDonationRequestByIdQuery(id, requesterId), cancellationToken);
+
+        return result is null ? NotFound() : Ok(result);
+    }
+
+    [HttpPost("{id:guid}/cancel")]
+    public async Task<IActionResult> Cancel(Guid id, CancellationToken cancellationToken)
+    {
+        // Stands in for the authenticated subject (real app: User.FindFirstValue("sub")).
+        var requesterId = Request.Headers["X-Requester-Id"].ToString();
+        if (string.IsNullOrWhiteSpace(requesterId))
+            return Unauthorized();
+
+        var result = await _sender.Send(
+            new CancelDonationRequestCommand(id, requesterId), cancellationToken);
 
         return result is null ? NotFound() : Ok(result);
     }

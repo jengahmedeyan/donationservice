@@ -23,4 +23,10 @@ public class InMemoryDonationRepository : IDonationRepository
         _store.TryGetValue(id, out var request);
         return Task.FromResult(request);
     }
+
+    public Task UpdateAsync(DonationRequest request, CancellationToken ct = default)
+    {
+        _store[request.Id] = request;
+        return Task.CompletedTask;
+    }
 }
