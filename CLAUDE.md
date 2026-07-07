@@ -1,8 +1,8 @@
 # CLAUDE.md
 
-Canonical steering file for AI coding agents working in this repository.
-This file is the source of truth for **how agents write code here**. It is committed and
-reviewed like code. `AGENTS.md` is a pointer to this file so Codex and Claude Code stay in sync.
+Canonical entry point for AI coding agents in this repository. This file is the index; the
+detailed always-follow rules live in `rules/` and are loaded just-in-time when relevant.
+`AGENTS.md` points here so Codex and Claude Code stay in sync. Committed and reviewed like code.
 
 ## Project overview
 
@@ -16,94 +16,44 @@ EF Core/Postgres inside Infrastructure without touching the inner layers.
 - MediatR (command/query handlers), FluentValidation
 - xUnit + FluentAssertions + Moq for tests
 
-## Architecture — respect the layers (dependencies point inward)
+## Security non-negotiables (read every time)
 
-- **`src/Api/`** — Controllers only: routing, model binding, status codes. Thin: send a MediatR
-  request, return the result. No business logic, no data access.
-- **`src/Application/`** — Business logic: MediatR handlers, DTOs, FluentValidation validators,
-  mapping. Depends on Domain interfaces, never on concrete data types.
-- **`src/Domain/`** — Entities, value objects, interfaces (e.g. `IDonationRepository`). No
-  framework dependencies.
-- **`src/Infrastructure/`** — Implementations of Domain interfaces (repositories). The ONLY
-  layer that touches a data store.
-
-**Reference slice — mimic it exactly.** Follow `SubmitDonationRequest` (command) and
-`GetDonationRequestById` (query, with ownership check) end to end:
-
-- `src/Api/Controllers/DonationsController.cs`
-- `src/Application/Donations/Commands/SubmitDonationRequest/*`
-- `src/Application/Donations/Queries/GetDonationRequestById/*`
-- `src/Infrastructure/Repositories/InMemoryDonationRepository.cs`
-- Cross-cutting: `src/Application/Common/Behaviors/ValidationBehavior.cs`,
-  `src/Application/Common/Exceptions/ForbiddenAccessException.cs`, and the failure→status
-  mapping in `src/Api/Program.cs`.
-
-To add a feature, use the `/new-slice` command — it scaffolds the slice the repo's way.
-
-## Build, test, lint (must ALL pass before a task is "done")
-
-```shell
-dotnet build -warnaserror
-dotnet format --verify-no-changes
-dotnet test
-```
-
-Or run the `/verify` command, which runs all three and reports. If the build fails with
-`MSB3101 ... being used by another process`, run `dotnet build-server shutdown` first — that is
-a stale build-server lock, not a code error.
-
-## Conventions
-
-- Async all the way; I/O methods end in `Async` and take a `CancellationToken`.
-- Records for DTOs/value objects. Nullable reference types stay enabled.
-- One handler per file. Small, single-purpose methods. File-scoped namespaces.
-- No magic strings for config; bind to typed options.
-
-## Validation & errors
-
-- Every request DTO has a FluentValidation validator in `Application/`. The `ValidationBehavior`
-  pipeline runs it before the handler.
-- Validation failures return 400 problem-details, never 500. Ownership failures throw
-  `ForbiddenAccessException` → 403. Mapping lives in `Program.cs`.
-- Never return raw exception messages or stack traces to callers.
-
-## Security & data handling (non-negotiable)
+Kept inline because these are what AI code most often gets wrong — full detail in
+[rules/common/security.md](rules/common/security.md):
 
 - **Authorization, not just authentication:** a user may only read/modify their OWN donation
-  requests. Every record-specific endpoint/handler checks ownership (see
-  `GetDonationRequestByIdHandler`: not-found → null, wrong owner → `ForbiddenAccessException`).
-- **PII:** `RequesterName`, `Location`, and `RequesterId` are sensitive. Never log them (log the
-  donation `Id`), never expose fields the caller isn't entitled to, never put them in error
-  messages.
-- Parameterized queries / LINQ only. No secrets hardcoded.
+  requests. Check ownership on every record-specific path (not-found → 404, wrong owner → 403),
+  before any state-specific behavior.
+- **PII:** never log or leak `RequesterName` / `Location` / `RequesterId` — log the `Id`.
+  Responses use `DonationRequestDto` (omits `RequesterId`).
 
-Before handing back any change that touches a handler or endpoint, run `/review-security`.
+## Rules (read the relevant file before working)
 
-## Testing requirements
+- [rules/common/git-workflow.md](rules/common/git-workflow.md) — branch → PR → human-merge; verify gate; commit style
+- [rules/common/security.md](rules/common/security.md) — authorization + PII (non-negotiable)
+- [rules/common/testing.md](rules/common/testing.md) — required test cases; assert real behavior
+- [rules/csharp/layering.md](rules/csharp/layering.md) — Clean Architecture layers + the reference slice
+- [rules/csharp/conventions.md](rules/csharp/conventions.md) — async, records, validation & error mapping
 
-- Every handler: happy path AND failure/edge cases (invalid input, unauthorized, not-found).
-  See `GetDonationRequestByIdHandlerTests` for the shape (owned / not-found / wrong-owner).
-- Assert real behavior, not just non-null. A test that only checks `NotBeNull()` is not enough.
-- Mock repositories with Moq; no real DB in unit tests.
+## Workflow (summary — see git-workflow.md)
 
-## Workflow for agents
+Plan → **branch** (never `main`) → implement the smallest change → `/verify` → `/security-scan`
++ `/review-security` for handler/endpoint changes → **`/open-pr`** → a human merges. The agent
+never commits to `main` or merges its own PR. To add a feature, use `/new-slice`.
 
-1. Plan first for non-trivial tasks; wait for approval before coding.
-2. **Branch, never work on `main`.** Start every task on a feature branch
-   (`feature/…`, `fix/…`, `chore/…`). `main` is protected by convention.
-3. Smallest change that satisfies the task; don't refactor unrelated code.
-4. Self-verify with `/verify` and confirm the security/PII rules before handing back.
-5. **Open a PR — do not merge it.** Push the branch and open a pull request against
-   `main` with the PR template filled in. A human reviews and merges. The agent never
-   commits directly to `main` and never merges its own PR. CI must be green on the PR.
-6. If a requirement is ambiguous or conflicts with this file, ask — don't guess.
+## Harness surface
 
-See `docs/agent-working-agreements.md` for context/token conventions and the model-routing table.
+- **Commands** (`.claude/commands/`): `/verify`, `/new-slice`, `/open-pr`, `/security-scan`,
+  `/review-security`.
+- **Subagents** (`.claude/agents/`): `planner`, `csharp-code-reviewer`, `security-reviewer`,
+  `tdd-guide` — see [.claude/agents/README.md](.claude/agents/README.md).
+- **Hooks** (`.claude/hooks/`): block commits to `main`; format + session note on stop.
+- **Evals** (`evals/`): deterministic guardrail checks + golden tasks; re-run when switching models.
+- Context/token conventions and model routing: [docs/agent-working-agreements.md](docs/agent-working-agreements.md).
 
-## Do NOT
+## Reference slice — mimic it exactly
 
-- Commit directly to `main`, or merge your own PR. Work on a branch; a human merges.
-- Add business logic to controllers, or data access outside Infrastructure.
-- Weaken Domain interfaces for an Infrastructure shortcut.
-- Disable nullable/analyzers/tests to make a build pass.
-- Commit secrets or real customer data.
+`SubmitDonationRequest` (command) and `GetDonationRequestById` (query, with ownership check).
+Details in [rules/csharp/layering.md](rules/csharp/layering.md).
+
+If a requirement is ambiguous or conflicts with these rules, ask — don't guess.
