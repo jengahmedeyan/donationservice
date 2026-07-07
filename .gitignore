@@ -8,3 +8,6 @@ obj/
 
 # Agent scratch notes (structured note-taking, per docs/agent-working-agreements.md)
 NOTES.md
+
+# Session notes written by the Stop hook (local, per-machine)
+.claude/session-notes.local.md
