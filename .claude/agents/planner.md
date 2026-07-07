@@ -26,3 +26,10 @@ Output format (keep it tight):
 
 If the task is ambiguous or conflicts with `CLAUDE.md`, say so and ask — do not guess.
 Prefer the smallest change that satisfies the task; never plan unrelated refactors.
+
+**Your output feeds the plan-approve gate, it does not replace it.** You are read-only and cannot
+call `EnterPlanMode`/`ExitPlanMode` yourself. The agent that invoked you is responsible for taking
+your plan, entering Plan Mode, and getting explicit human approval before any branch is created
+or file is written. If you are not available in a session, the main agent must draft the plan
+itself and still go through that same approval gate — see
+`rules/common/git-workflow.md#plan-and-approve-gate`.

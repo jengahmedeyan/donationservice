@@ -37,9 +37,16 @@ Kept inline because these are what AI code most often gets wrong — full detail
 
 ## Workflow (summary — see git-workflow.md)
 
-Plan → **branch** (never `main`) → implement the smallest change → `/verify` → `/security-scan`
-+ `/review-security` for handler/endpoint changes → **`/open-pr`** → a human merges. The agent
-never commits to `main` or merges its own PR. To add a feature, use `/new-slice`.
+**Plan and get explicit approval** (Plan Mode — see below) → **branch** (never `main`) →
+implement the smallest change → `/verify` → `/security-scan` + `/review-security` for
+handler/endpoint changes → **`/open-pr`** → a human merges. The agent never commits to `main`
+or merges its own PR. To add a feature, use `/new-slice`.
+
+**The planning step is a real gate, not a formality.** For any non-trivial task, enter Plan Mode
+(`EnterPlanMode`), draft the plan, and call `ExitPlanMode` to request explicit approval —
+do not create branches or write/edit files until that approval is granted. A one-line fix or a
+docs-only typo can skip it; anything that adds/changes behavior, tests, or the harness itself
+cannot. Full detail: [rules/common/git-workflow.md](rules/common/git-workflow.md#plan-and-approve-gate).
 
 ## Harness surface
 
