@@ -24,6 +24,16 @@ public class InMemoryDonationRepository : IDonationRepository
         return Task.FromResult(request);
     }
 
+    public Task<IReadOnlyList<DonationRequest>> GetByRequesterIdAsync(
+        string requesterId, CancellationToken ct = default)
+    {
+        // Scope to the owner at the data layer — never return anyone else's rows.
+        IReadOnlyList<DonationRequest> owned = _store.Values
+            .Where(r => r.RequesterId == requesterId)
+            .ToList();
+        return Task.FromResult(owned);
+    }
+
     public Task UpdateAsync(DonationRequest request, CancellationToken ct = default)
     {
         _store[request.Id] = request;
