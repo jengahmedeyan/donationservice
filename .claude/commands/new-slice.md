@@ -19,6 +19,7 @@ into your reasoning wholesale.
 ## Steps
 
 1. Confirm the slice type (Command vs Query) and feature name from the arguments. If ambiguous, ask.
+   Then create a feature branch off `main` (e.g. `feature/{feature-name}`) — never work on `main`.
 2. Create the folder under `src/Application/Donations/{Commands|Queries}/{FeatureName}/`:
    - The `record` request implementing `IRequest<TResponse>`.
    - One handler per file, constructor-injecting `IDonationRepository`, async with `CancellationToken`.
@@ -29,6 +30,8 @@ into your reasoning wholesale.
 5. Add xUnit tests mirroring `GetDonationRequestByIdHandlerTests`: happy path AND failure/edge cases
    (invalid input, unauthorized, not-found). Assert real behavior, not just non-null.
 6. Respect PII rules: never log `RequesterName`/`Location`/`RequesterId`; log the `Id`.
-7. Run `/verify`. Only report done when build, format, and tests are all green.
+7. Run `/verify`. Only proceed when build, format, and tests are all green.
+8. Push the branch and open a PR against `main` (fill in the PR template). Do NOT merge it —
+   a human reviews and merges. Report the PR link.
 
 Keep the change minimal — do not refactor unrelated code.

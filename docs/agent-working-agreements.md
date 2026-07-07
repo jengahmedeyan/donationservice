@@ -42,7 +42,21 @@ and the evals — nothing model-specific). Then route by task complexity:
 **When you switch the default model or edit `CLAUDE.md`, re-run `evals/`** (topic 6). Don't
 switch on vibes — switch on the eval scores holding.
 
+## Branch & PR workflow (non-negotiable)
+
+Changes reach `main` through review, never directly. The loop:
+
+1. Branch off `main` — `feature/…`, `fix/…`, or `chore/…`. Never commit to `main`.
+2. Implement, `/verify`, `/review-security`.
+3. Push the branch and open a PR against `main` with the template filled in.
+4. A **human** reviews and merges. The agent never merges its own PR.
+
+This is what makes velocity safe: your PR is already green (CI + guardrails ran on it)
+before a human looks, so review starts from a known-good state and focuses on judgment,
+not mechanics.
+
 ## Definition of done (ties to topic 6)
 
-Green tests alone are not "done." A task is done when `/verify` is green **and** the
-`/review-security` checklist passes for any change touching a handler or endpoint.
+Green tests alone are not "done." A task is done when `/verify` is green, the
+`/review-security` checklist passes for any change touching a handler or endpoint,
+**and the work is on a branch with an open PR whose CI is green** — awaiting human merge.

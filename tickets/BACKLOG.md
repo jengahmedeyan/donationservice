@@ -87,10 +87,12 @@ Legend: **Type** = Feature / Bug / Chore · **Slice** = the vertical slice it ma
 ---
 
 ## How to run a ticket through the harness
-1. Pick a ticket. For a new slice: `/new-slice Command CancelDonationRequest` (or Query).
+1. Pick a ticket and create a feature branch off `main`. For a new slice:
+   `/new-slice Command CancelDonationRequest` (or Query).
 2. Let the agent plan, then implement following the reference slice.
 3. `/verify` — build (`-warnaserror`), format, tests must all pass.
 4. `/review-security` — confirm authorization + PII before handing back.
-5. Commit and push; confirm CI is green.
+5. Push the branch and open a PR against `main`; confirm CI is green on the PR.
+   A human reviews and merges — the agent never merges its own PR or commits to `main`.
 6. If the ticket has a matching eval, grade the result against `evals/tasks/*` to
    check the harness itself, not just the code.

@@ -89,14 +89,20 @@ Before handing back any change that touches a handler or endpoint, run `/review-
 ## Workflow for agents
 
 1. Plan first for non-trivial tasks; wait for approval before coding.
-2. Smallest change that satisfies the task; don't refactor unrelated code.
-3. Self-verify with `/verify` and confirm the security/PII rules before handing back.
-4. If a requirement is ambiguous or conflicts with this file, ask — don't guess.
+2. **Branch, never work on `main`.** Start every task on a feature branch
+   (`feature/…`, `fix/…`, `chore/…`). `main` is protected by convention.
+3. Smallest change that satisfies the task; don't refactor unrelated code.
+4. Self-verify with `/verify` and confirm the security/PII rules before handing back.
+5. **Open a PR — do not merge it.** Push the branch and open a pull request against
+   `main` with the PR template filled in. A human reviews and merges. The agent never
+   commits directly to `main` and never merges its own PR. CI must be green on the PR.
+6. If a requirement is ambiguous or conflicts with this file, ask — don't guess.
 
 See `docs/agent-working-agreements.md` for context/token conventions and the model-routing table.
 
 ## Do NOT
 
+- Commit directly to `main`, or merge your own PR. Work on a branch; a human merges.
 - Add business logic to controllers, or data access outside Infrastructure.
 - Weaken Domain interfaces for an Infrastructure shortcut.
 - Disable nullable/analyzers/tests to make a build pass.
