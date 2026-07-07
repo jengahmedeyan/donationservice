@@ -2,6 +2,7 @@ using Application.Donations.Commands.CancelDonationRequest;
 using Application.Donations.Commands.SubmitDonationRequest;
 using Application.Donations.Dtos;
 using Application.Donations.Queries.GetDonationRequestById;
+using Application.Donations.Queries.GetMyDonationRequests;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 
@@ -22,6 +23,22 @@ public class DonationsController : ControllerBase
     {
         var result = await _sender.Send(command, cancellationToken);
         return CreatedAtAction(nameof(GetById), new { id = result.Id }, result);
+    }
+
+    [HttpGet]
+    public async Task<ActionResult<IReadOnlyList<DonationRequestDto>>> GetMine(
+        CancellationToken cancellationToken)
+    {
+        // Stands in for the authenticated subject (real app: User.FindFirstValue("sub")).
+        var requesterId = Request.Headers["X-Requester-Id"].ToString();
+        if (string.IsNullOrWhiteSpace(requesterId))
+            return Unauthorized();
+
+        var result = await _sender.Send(
+            new GetMyDonationRequestsQuery(requesterId), cancellationToken);
+
+        // Empty list is a valid 200 result, not a 404.
+        return Ok(result);
     }
 
     [HttpGet("{id:guid}")]
